@@ -2,37 +2,60 @@ import React, { useEffect, useRef } from "react";
 import * as PIXI from "pixi.js";
 
 const PixiComponent = () => {
-  const pixiContainerRef = useRef(null);
+  const pixiContainerRef = useRef<HTMLDivElement | null>(null); // Ref for container
 
-  useEffect(() => {
-    if (pixiContainerRef.current) {
-        // Create the PixiJS application
-        const app = new PIXI.Application({
-          width: 800, // Set the desired width
-          height: 600, // Set the desired height
-          backgroundColor: 0x1099bb,
+  useEffect( () => {
+    const applicationWrapper = async () => {
+      // Ensure the container ref exists
+      const app = new PIXI.Application();
+      if (pixiContainerRef.current) {
+        
+        await app.init({ background: '#1099bb', resizeTo: window });
+        document.body.appendChild(app.canvas);
+
+        const container = new PIXI.Container();
+        app.stage.addChild(container);
+
+        // Load the bunny texture
+        const texture = await PIXI.Assets.load('https://pixijs.com/assets/bunny.png');
+
+        // Create a 5x5 grid of bunnies in the container
+        for (let i = 0; i < 25; i++)
+        {
+            const bunny = new PIXI.Sprite(texture);
+
+            bunny.x = (i % 5) * 40;
+            bunny.y = Math.floor(i / 5) * 40;
+            container.addChild(bunny);
+        }
+
+        // Move the container to the center
+        container.x = app.screen.width / 2;
+        container.y = app.screen.height / 2;
+
+        // Center the bunny sprites in local container coordinates
+        container.pivot.x = container.width / 2;
+        container.pivot.y = container.height / 2;
+
+        // Listen for animate update
+        app.ticker.add((time) =>
+        {
+            // Continuously rotate the container!
+            // * use delta to create frame-independent transform *
+            container.rotation -= 0.01 * time.deltaTime;
         });
-        appRef.current = app;
-  
-        // Append the canvas to the container
-        pixiContainerRef.current.appendChild(app.view);
-  
-        // Add a basic PixiJS graphic (e.g., a rectangle)
-        const rectangle = new PIXI.Graphics();
-        rectangle.beginFill(0xde3249);
-        rectangle.drawRect(50, 50, 100, 100);
-        rectangle.endFill();
-        app.stage.addChild(rectangle);
-  
-        // Cleanup function
-        return () => {
-          app.destroy(true, { children: true });
-          pixiContainerRef.current?.removeChild(app.view);
-        };
       }
+        // Cleanup function to destroy the PixiJS app
+        // return () => {
+        //   app.destroy(true, { children: true });
+        //   appRef.current = null; // Clear the ref
+        // };
+    }
+
+    applicationWrapper()
   }, []);
 
-  return <div ref={pixiContainerRef} />;
+  return <div ref={pixiContainerRef} className="h-screen"/>;
 };
 
 export default PixiComponent;
