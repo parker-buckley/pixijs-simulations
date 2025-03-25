@@ -9,47 +9,83 @@ const PixiComponent = () => {
       // Ensure the container ref exists
       const app = new PIXI.Application();
       if (pixiContainerRef.current) {
-        
-        await app.init({ background: '#1099bb', resizeTo: window });
-        document.body.appendChild(app.canvas);
+
+        await app.init({ background: '#1099bb', resizeTo: window, });
+        pixiContainerRef.current.appendChild(app.canvas);
 
         const container = new PIXI.Container();
         app.stage.addChild(container);
 
         // Load the bunny texture
-        const texture = await PIXI.Assets.load('https://pixijs.com/assets/bunny.png');
+        const earthTexture = await PIXI.Assets.load<PIXI.Texture>('/earthTransparentBackground.png');
+        const moonTexture = await PIXI.Assets.load<PIXI.Texture>('/moonTransparentBackground.png');
+        const earth = new PIXI.Sprite(earthTexture);
+        const moon = new PIXI.Sprite(moonTexture);
+        
+        earth.setSize( screen.width / 8 );
+        moon.setSize( screen.width / 12 );
 
-        // Create a 5x5 grid of bunnies in the container
-        for (let i = 0; i < 25; i++)
-        {
-            const bunny = new PIXI.Sprite(texture);
+        
+        earth.y = container.y / 2;
+        earth.x = container.x / 2;
+        container.addChild(earth);
 
-            bunny.x = (i % 5) * 40;
-            bunny.y = Math.floor(i / 5) * 40;
-            container.addChild(bunny);
-        }
+        moon.y = container.y + 200;
+        moon.x = container.x + 200;
+        container.addChild(moon);
+
+        earth.anchor.set( 0.5, 0.5 );
+        moon.anchor.set( 0.5, 0.5 );
 
         // Move the container to the center
-        container.x = app.screen.width / 2;
-        container.y = app.screen.height / 2;
+        container.x = app.screen.width / 2 + (container.width / 2);
+        container.y = app.screen.height / 2 + (container.height / 2);
 
         // Center the bunny sprites in local container coordinates
         container.pivot.x = container.width / 2;
         container.pivot.y = container.height / 2;
 
+        // Initial velocity and acceleration
+        const velocity = { x: 1.5, y: -1.5 };
+        const acceleration = { x: 0, y: 0 };
+        const G = 1000; // Gravitational constant (adjust for realistic motion)
+
+        console.log(earth.x);
+        console.log(earth.y);
+        console.log(moon.x);
+        console.log(moon.y);
+
         // Listen for animate update
         app.ticker.add((time) =>
         {
+          // Compute vector to Earth
+          const dx = earth.x - moon.x;
+          const dy = earth.y - moon.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          // Normalize vector and compute gravitational force
+          const force = G / (distance * distance);
+          const ax = (dx / distance) * force;
+          const ay = (dy / distance) * force;
+
+          // Update acceleration
+          acceleration.x = ax;
+          acceleration.y = ay;
+
+          // Update velocity
+          velocity.x += acceleration.x;
+          velocity.y += acceleration.y;
+
+          // Update moon position
+          moon.x += velocity.x;
+          moon.y += velocity.y;
+
             // Continuously rotate the container!
             // * use delta to create frame-independent transform *
-            container.rotation -= 0.01 * time.deltaTime;
+            earth.rotation -= 0.01 * time.deltaTime;
+            moon.rotation -= 0.005 * time.deltaTime;
         });
       }
-        // Cleanup function to destroy the PixiJS app
-        // return () => {
-        //   app.destroy(true, { children: true });
-        //   appRef.current = null; // Clear the ref
-        // };
     }
 
     applicationWrapper()
