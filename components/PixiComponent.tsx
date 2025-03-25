@@ -3,17 +3,33 @@ import * as PIXI from "pixi.js";
 
 const PixiComponent = () => {
   const pixiContainerRef = useRef<HTMLDivElement | null>(null); // Ref for container
+  const appRef = useRef<PIXI.Application | null>(null);
 
   useEffect( () => {
     const applicationWrapper = async () => {
-      // Ensure the container ref exists
       const app = new PIXI.Application();
+
       if (pixiContainerRef.current) {
 
-        await app.init({ background: '#1099bb', resizeTo: window, });
+        await app.init({ background: '#000000', resizeTo: window, });
         pixiContainerRef.current.appendChild(app.canvas);
 
         const container = new PIXI.Container();
+
+        const NUM_STARS = 200;
+        const backgroundGraphics = new PIXI.Graphics(  );
+        for( let i = 0; i < NUM_STARS; i++ ) {
+          backgroundGraphics.fill('#ffffff');
+          backgroundGraphics.star(
+            Math.round(Math.random() * screen.width)
+            , Math.round(Math.random() * screen.height)  
+            , 4
+            , Math.round(Math.random() * 7)
+            , 0
+            , Math.round( Math.random() * Math.PI)
+          );
+        }
+        app.stage.addChild( backgroundGraphics )
         app.stage.addChild(container);
 
         // Load the bunny texture
@@ -23,7 +39,7 @@ const PixiComponent = () => {
         const moon = new PIXI.Sprite(moonTexture);
         
         earth.setSize( screen.width / 8 );
-        moon.setSize( screen.width / 12 );
+        moon.setSize( screen.width / 8 / 4 );
 
         
         earth.y = container.y / 2;
@@ -89,6 +105,13 @@ const PixiComponent = () => {
     }
 
     applicationWrapper()
+
+    return () => {
+      if (appRef.current) {
+        appRef.current.destroy(true, { children: true });
+        appRef.current = null;
+      }
+    };
   }, []);
 
   return <div ref={pixiContainerRef} className="h-screen"/>;
