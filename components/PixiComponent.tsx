@@ -58,27 +58,27 @@ const PixiComponent = () => {
         // Listen for animate update
         app.ticker.add((time) =>
         {
-          // Compute vector to Earth
-          const dx = earth.x - moon.x;
-          const dy = earth.y - moon.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
+            // Compute vector to Earth
+            const dx = earth.x - moon.x;
+            const dy = earth.y - moon.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
 
-          // Normalize vector and compute gravitational force
-          const force = G / (distance * distance);
-          const ax = (dx / distance) * force;
-          const ay = (dy / distance) * force;
+            // Normalize vector and compute gravitational force
+            const force = G / (distance * distance);
+            const ax = (dx / distance) * force;
+            const ay = (dy / distance) * force;
 
-          // Update acceleration
-          acceleration.x = ax;
-          acceleration.y = ay;
+            // Update acceleration
+            acceleration.x = ax;
+            acceleration.y = ay;
 
-          // Update velocity
-          velocity.x += acceleration.x;
-          velocity.y += acceleration.y;
+            // Update velocity
+            velocity.x += acceleration.x;
+            velocity.y += acceleration.y;
 
-          // Update moon position
-          moon.x += velocity.x;
-          moon.y += velocity.y;
+            // Update moon position
+            moon.x += velocity.x;
+            moon.y += velocity.y;
 
             // Continuously rotate the container!
             // * use delta to create frame-independent transform *
