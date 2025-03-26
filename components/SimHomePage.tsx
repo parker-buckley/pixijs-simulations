@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react'
-import PixiComponent from './PixiComponent'
+import OrbitSim from './OrbitSim'
 import Nav from './Nav'
 
 export default function SimHomePage() {
@@ -11,7 +11,7 @@ export default function SimHomePage() {
   return (
     <div className="flex-row h-screen bg-background">
         <Nav isOrbitSimEnabled={isOrbitSimEnabled} setIsOrbitSimEnabled={setIsOrbitSimEnabled}></Nav>
-        { isOrbitSimEnabled && <PixiComponent></PixiComponent>}
+        { isOrbitSimEnabled && <OrbitSim></OrbitSim>}
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import * as PIXI from "pixi.js";
 
-const PixiComponent = () => {
+const OrbitSim = () => {
   const pixiContainerRef = useRef<HTMLDivElement | null>(null); // Ref for container
   const appRef = useRef<PIXI.Application | null>(null);
   
@@ -13,7 +13,7 @@ const PixiComponent = () => {
   const orbitingBodies: PIXI.Sprite[] = [];
   const velocityVectors: {x: number, y:number}[] = []
   const NUM_STARS = 200;
-  const NUM_MOONS = 2;
+  const NUM_MOONS = 1;
 
   const calculateOrbit = (orbitVelocityVector: {x: number, y:number}, orbitingBody: PIXI.Sprite, fixedBody: PIXI.Sprite) => {
     // Compute vector to Earth
@@ -78,15 +78,15 @@ const PixiComponent = () => {
         
         for( let i = 0; i < NUM_MOONS; i++ ) {
           const moon = new PIXI.Sprite(moonTexture);
-          moon.setSize( screen.width / 10 / Math.round( Math.random() * 10 ) );
-          moon.y = container.y + 200 + Math.round( Math.random() * 200);
-          moon.x = container.x + 200 + Math.round( Math.random() * 200);
+          moon.setSize( screen.width / 10 / Math.round( Math.random() * 4 ) );
+          moon.y = container.y + 150 + Math.round( Math.random() * 200);
+          moon.x = container.x + 150 + Math.round( Math.random() * 200);
           container.addChild(moon);
           moon.anchor.set( 0.5, 0.5 );
 
           orbitingBodies.push( moon );
           velocityVectors.push( { 
-            x: 1 + Math.round( Math.random() * 1 )
+            x: 1 + Math.round( Math.random() * 0.5 )
             , y: -1 + Math.round( Math.random() * 0.5 )
           } );
         }
@@ -120,9 +120,9 @@ const PixiComponent = () => {
         appRef.current = null;
       }
     };
-  }, [ pixiContainerRef, appRef ]);
+  }, [ pixiContainerRef, appRef, calculateOrbit, orbitingBodies, velocityVectors ]);
 
   return <div ref={pixiContainerRef} className="h-screen"/>;
 };
 
-export default PixiComponent;
+export default OrbitSim;

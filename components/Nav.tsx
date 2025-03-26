@@ -8,7 +8,7 @@ export default function Nav(
 ) {
     return (
       <div className="w-full flex-grow flex-row lg:flex items-center lg:w-auto hidden">
-        <div className="text-sm mt-2 xl:mx-8">
+        <div className="text-base mt-2 xl:mx-8">
             <button 
                 onClick={() => setIsOrbitSimEnabled(!isOrbitSimEnabled)}
                 disabled={isOrbitSimEnabled}
