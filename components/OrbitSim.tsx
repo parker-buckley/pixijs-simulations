@@ -13,7 +13,7 @@ const OrbitSim = () => {
   const orbitingBodies: PIXI.Sprite[] = [];
   const velocityVectors: {x: number, y:number}[] = []
   const NUM_STARS = 200;
-  const NUM_MOONS = 2;
+  const NUM_MOONS = 5;
 
   const calculateOrbit = (orbitVelocityVector: {x: number, y:number}, orbitingBody: PIXI.Sprite, fixedBody: PIXI.Sprite) => {
     // Compute vector to Earth
@@ -87,13 +87,11 @@ const OrbitSim = () => {
       if( !existingOrbitPathGraphics ) {
         universeContainer?.addChild( pixiGraphics );
         universeContainer?.setChildIndex( pixiGraphics, 0 );
-      } else {
-        pixiGraphics.getTransform()
+      }
+      
+      for( const point of projectedPoints ) {
         pixiGraphics.fill( '#ffffff' );
-
-        for( const point of projectedPoints ) {
-          pixiGraphics.circle( point.x, point.y, 1 );
-        }
+        pixiGraphics.circle( point.x, point.y, 1 );
       }
     }
   }
@@ -102,21 +100,20 @@ const OrbitSim = () => {
     const appReady = new Promise<PIXI.Application>((resolve) => {
       const app = new PIXI.Application();
       appRef.current = app;
-      resolve(app)
+      resolve(app);
     });
-
+    
     const applicationWrapper = async () => {
       const app = await appReady;      
+      await app.init({ background: '#000000', resizeTo: window, });
 
       if (pixiContainerRef.current && appRef.current) {
-
-        await app.init({ background: '#000000', resizeTo: window, });
         pixiContainerRef.current.appendChild(app.canvas);
 
         const container = new PIXI.Container({label:'universe'});
         const orbitPathGraphics = new PIXI.Graphics({label:'orbitPathGraphics'});
         const backgroundGraphics = new PIXI.Graphics();
-        
+
         for( let i = 0; i < NUM_STARS; i++ ) {
           backgroundGraphics.fill('#ffffff');
           backgroundGraphics.star(
@@ -162,14 +159,13 @@ const OrbitSim = () => {
         container.pivot.x = container.width / 2;
         container.pivot.y = container.height / 2;
         
-        // for( let i = 0; i < orbitingBodies.length; i ++ ) {
-        //   lookAhead( 100, velocityVectors[i], orbitingBodies[i], earth, orbitPathGraphics ); 
-        // } 
+        for( let i = 0; i < orbitingBodies.length; i ++ ) {
+            lookAhead( 2000, velocityVectors[i], orbitingBodies[i], earth, orbitPathGraphics );
+        }
 
         app.ticker.add((time) =>
-          { 
+          {
             for( let i = 0; i < orbitingBodies.length; i ++ ) {
-              // lookAhead( 1000, velocityVectors[i], orbitingBodies[i], earth, orbitPathGraphics ); 
               calculateOrbit( velocityVectors[i], orbitingBodies[i], earth);
               orbitingBodies[i].rotation -= 0.005 * time.deltaTime;
             } 
