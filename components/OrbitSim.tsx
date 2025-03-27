@@ -14,6 +14,7 @@ const OrbitSim = () => {
   const velocityVectors: {x: number, y:number}[] = []
   const NUM_STARS = 200;
   const NUM_MOONS = 5;
+  let runPhysics = true;
 
   const calculateOrbit = (orbitVelocityVector: {x: number, y:number}, orbitingBody: PIXI.Sprite, fixedBody: PIXI.Sprite) => {
     // Compute vector to Earth
@@ -96,7 +97,11 @@ const OrbitSim = () => {
     }
   }
 
-  const initializeUniverse = async ( appContainer: PIXI.Container, backgroundGraphics: PIXI.Graphics ): PIXI.Sprite => {
+  const initializeUniverse = async ( 
+    appContainer: PIXI.Container
+    , backgroundGraphics: PIXI.Graphics 
+    , orbitPathGraphics: PIXI.Graphics 
+  ): Promise<PIXI.Sprite> => {
     for( let i = 0; i < NUM_STARS; i++ ) {
       backgroundGraphics.fill('#ffffff');
       backgroundGraphics.star(
@@ -134,12 +139,54 @@ const OrbitSim = () => {
       } );
     }
 
-    addMoonDragEffects();
+    addMoonDragEffects( orbitPathGraphics, earth );
 
     return earth;
   }
 
-  const addMoonDragEffects = () => {}
+  const addMoonDragEffects = ( orbitPathGraphics: PIXI.Graphics, earth: PIXI.Sprite ) => {
+    if( appRef.current ) {
+
+      let dragTarget: PIXI.Sprite | null = null;
+      appRef.current.stage.hitArea = appRef.current.screen;
+      appRef.current.stage.eventMode = 'static';
+
+      for( const orbitingBody of orbitingBodies ) {
+
+        orbitingBody.eventMode = 'static';
+        orbitingBody.cursor = 'pointer';
+        orbitingBody.on('pointerdown', (event) => {
+          orbitPathGraphics.clear();
+          runPhysics = false;
+          dragTarget = orbitingBody;
+          
+          if (dragTarget) {
+            dragTarget.parent.toLocal(event.global, undefined, dragTarget.position );
+          }
+        }, orbitingBody );
+      
+        appRef.current?.stage.on('pointermove', (event)=>{
+          if (dragTarget) {
+            orbitPathGraphics.clear();
+            for( let i = 0; i < orbitingBodies.length; i++ ) {
+              lookAhead( 2000, velocityVectors[i], orbitingBodies[i], earth, orbitPathGraphics );
+            }
+            dragTarget.parent.toLocal(event.global, undefined, dragTarget.position );
+          }
+        });
+      }
+
+      appRef.current.stage.on('pointerup', () => {
+        runPhysics = true;
+        
+        if (dragTarget)
+          {
+            dragTarget.alpha = 1;
+            dragTarget = null;
+          }
+      });
+    }
+  }
 
   useEffect( () => {
     const appReady = new Promise<PIXI.Application>((resolve) => {
@@ -163,7 +210,7 @@ const OrbitSim = () => {
         app.stage.addChild( backgroundGraphics );
         app.stage.addChild( container );
 
-        const earth = await initializeUniverse( container, backgroundGraphics );
+        const earth = await initializeUniverse( container, backgroundGraphics, orbitPathGraphics );
 
         container.x = app.screen.width / 2 + (container.width / 2);
         container.y = app.screen.height / 2 + (container.height / 2);
@@ -177,10 +224,12 @@ const OrbitSim = () => {
         app.ticker.add((time) =>
           {
             for( let i = 0; i < orbitingBodies.length; i ++ ) {
-              calculateOrbit( velocityVectors[i], orbitingBodies[i], earth);
-              orbitingBodies[i].rotation -= 0.005 * time.deltaTime;
+              if( runPhysics ) { 
+                calculateOrbit( velocityVectors[i], orbitingBodies[i], earth); 
+                orbitingBodies[i].rotation -= 0.005 * time.deltaTime;
+                earth.rotation -= 0.01 * time.deltaTime;
+              }
             } 
-            earth.rotation -= 0.01 * time.deltaTime;
         });
       }
     }
