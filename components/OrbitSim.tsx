@@ -40,7 +40,7 @@ const OrbitSim = () => {
     orbitingBody.y += orbitVelocityVector.y;
   }
 
-  const lookAhead = ( 
+  const drawOrbitPaths = ( 
     nTimes: number
     , orbitVelocityVector: {x: number, y:number}
     , orbitingBody: PIXI.Sprite
@@ -101,6 +101,7 @@ const OrbitSim = () => {
     appContainer: PIXI.Container
     , backgroundGraphics: PIXI.Graphics 
     , orbitPathGraphics: PIXI.Graphics 
+    , velocityVectorGraphics: PIXI.Graphics 
   ): Promise<PIXI.Sprite> => {
     for( let i = 0; i < NUM_STARS; i++ ) {
       backgroundGraphics.fill('#ffffff');
@@ -139,12 +140,16 @@ const OrbitSim = () => {
       } );
     }
 
-    addMoonDragEffects( orbitPathGraphics, earth );
+    addMoonDragEffects( orbitPathGraphics, velocityVectorGraphics, earth );
 
     return earth;
   }
 
-  const addMoonDragEffects = ( orbitPathGraphics: PIXI.Graphics, earth: PIXI.Sprite ) => {
+  const addMoonDragEffects = ( 
+    orbitPathGraphics: PIXI.Graphics
+    , velocityVectorGraphics: PIXI.Graphics
+    , earth: PIXI.Sprite 
+  ) => {
     if( appRef.current ) {
 
       let dragTarget: PIXI.Sprite | null = null;
@@ -169,7 +174,8 @@ const OrbitSim = () => {
           if (dragTarget) {
             orbitPathGraphics.clear();
             for( let i = 0; i < orbitingBodies.length; i++ ) {
-              lookAhead( 2000, velocityVectors[i], orbitingBodies[i], earth, orbitPathGraphics );
+              drawOrbitPaths( 2000, velocityVectors[i], orbitingBodies[i], earth, orbitPathGraphics );
+              drawVelocityVectors( velocityVectorGraphics );
             }
             dragTarget.parent.toLocal(event.global, undefined, dragTarget.position );
           }
@@ -185,6 +191,21 @@ const OrbitSim = () => {
             dragTarget = null;
           }
       });
+    }
+  }
+
+  const drawVelocityVectors = ( velocityVectorGraphics: PIXI.Graphics ) => {
+    velocityVectorGraphics.clear();
+    for( let i = 0; i < orbitingBodies.length; i++ ) {
+
+      const velocityVector = velocityVectors[i];
+
+      velocityVectorGraphics.stroke({ width: 3, color: 'green' });
+      velocityVectorGraphics.moveTo( orbitingBodies[i].position.x, orbitingBodies[i].position.y );
+      velocityVectorGraphics.lineTo( 
+        orbitingBodies[i].x + velocityVector.x * 50
+        , orbitingBodies[i].y + velocityVector.y * 50 
+      );
     }
   }
 
@@ -204,13 +225,15 @@ const OrbitSim = () => {
 
         const container = new PIXI.Container({label:'universe'});
         const orbitPathGraphics = new PIXI.Graphics({label:'orbitPathGraphics'});
+        const velocityVectorGraphics = new PIXI.Graphics();
         const backgroundGraphics = new PIXI.Graphics();
 
         
         app.stage.addChild( backgroundGraphics );
         app.stage.addChild( container );
+        container.addChild( velocityVectorGraphics );
 
-        const earth = await initializeUniverse( container, backgroundGraphics, orbitPathGraphics );
+        const earth = await initializeUniverse( container, backgroundGraphics, orbitPathGraphics, velocityVectorGraphics );
 
         container.x = app.screen.width / 2 + (container.width / 2);
         container.y = app.screen.height / 2 + (container.height / 2);
@@ -218,13 +241,14 @@ const OrbitSim = () => {
         container.pivot.y = container.height / 2;
         
         for( let i = 0; i < orbitingBodies.length; i ++ ) {
-            lookAhead( 2000, velocityVectors[i], orbitingBodies[i], earth, orbitPathGraphics );
+            drawOrbitPaths( 2000, velocityVectors[i], orbitingBodies[i], earth, orbitPathGraphics );
         }
 
         app.ticker.add((time) =>
           {
             for( let i = 0; i < orbitingBodies.length; i ++ ) {
               if( runPhysics ) { 
+                drawVelocityVectors( velocityVectorGraphics );
                 calculateOrbit( velocityVectors[i], orbitingBodies[i], earth); 
                 orbitingBodies[i].rotation -= 0.005 * time.deltaTime;
                 earth.rotation -= 0.01 * time.deltaTime;
