@@ -4,6 +4,7 @@ import * as PIXI from "pixi.js";
 const OrbitSim = () => {
   const pixiContainerRef = useRef<HTMLDivElement | null>(null); // Ref for container
   const appRef = useRef<PIXI.Application | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [ numMoons, setNumMoons ] = useState<number>(1);
 
   /* 
@@ -236,10 +237,12 @@ const OrbitSim = () => {
     
     const applicationWrapper = async () => {
       const app = await appReady;      
-      await app.init({ background: '#000000', resizeTo: window, });
+      await app.init({ background: '#000000', resizeTo: window });
 
       if (pixiContainerRef.current && appRef.current) {
-        pixiContainerRef.current.appendChild(app.canvas);
+
+        canvasRef.current = appRef.current.canvas;
+        canvasRef.current.setAttribute('id', 'pixi-canvas' );
 
         const container = new PIXI.Container({label:'universe'});
         const orbitPathGraphics = new PIXI.Graphics({label:'orbitPathGraphics'});
@@ -274,17 +277,32 @@ const OrbitSim = () => {
             earth.rotation -= 0.01 * time.deltaTime;
         });
       }
+
+      if( pixiContainerRef.current ) {
+        for ( const pixiContainerChild of pixiContainerRef.current.children ) {
+          if( 
+            pixiContainerChild.getAttribute('id') !== 'pixi-canvas' 
+            && pixiContainerChild.tagName === 'CANVAS'
+          ) {
+            pixiContainerChild.remove();
+          }
+        }
+        pixiContainerRef.current.appendChild(app.canvas);
+      }
+
+      return () => {
+        if (appRef.current) {
+          appRef.current.destroy(true, { children: true });
+          appRef.current = null;
+        }
+        if (pixiContainerRef.current) {
+          pixiContainerRef.current.remove();
+        }
+      };
     }
 
     applicationWrapper()
-
-    return () => {
-      if (appRef.current) {
-        appRef.current.destroy(true, { children: true });
-        appRef.current = null;
-      }
-    };
-  }, [ pixiContainerRef, appRef, numMoons, setNumMoons ]);
+  }, [ pixiContainerRef, appRef, numMoons, setNumMoons, canvasRef ]);
 
   return (
     <div ref={pixiContainerRef} className="h-screen">

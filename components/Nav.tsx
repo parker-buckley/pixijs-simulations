@@ -3,8 +3,16 @@
 import React from 'react'
 
 export default function Nav(
-  { isOrbitSimEnabled, setIsOrbitSimEnabled }
-  : {isOrbitSimEnabled: boolean, setIsOrbitSimEnabled: React.Dispatch<React.SetStateAction<boolean>>}
+  { isOrbitSimEnabled
+    , setIsOrbitSimEnabled 
+    , isPlinkoEnabled
+    , setIsPlinkoEnabled 
+  }: {
+    isOrbitSimEnabled: boolean
+    , setIsOrbitSimEnabled: React.Dispatch<React.SetStateAction<boolean>>
+    , isPlinkoEnabled: boolean
+    , setIsPlinkoEnabled: React.Dispatch<React.SetStateAction<boolean>>
+  }
 ) {
     /* 
       Sim Ideas: 
@@ -24,10 +32,22 @@ export default function Nav(
       <div className="w-full flex-grow flex-row lg:flex items-center lg:w-auto hidden">
         <div className="text-base mt-2 xl:mx-8">
             <button 
-                onClick={() => setIsOrbitSimEnabled(!isOrbitSimEnabled)}
+                onClick={() => {
+                  setIsOrbitSimEnabled(!isOrbitSimEnabled);
+                  setIsPlinkoEnabled(!isPlinkoEnabled);
+                }}
                 disabled={isOrbitSimEnabled}
                 className="block lg:inline-block text-md font-bold sm:hover:bg-transparent rounded-lg">
                 Orbit Sim
+            </button>
+            <button 
+                onClick={() => {
+                  setIsPlinkoEnabled(!isPlinkoEnabled);
+                  setIsOrbitSimEnabled(!isOrbitSimEnabled);
+                }}
+                disabled={isPlinkoEnabled}
+                className="block lg:inline-block text-md font-bold sm:hover:bg-transparent rounded-lg">
+                Plinko
             </button>
         </div>
       </div>
