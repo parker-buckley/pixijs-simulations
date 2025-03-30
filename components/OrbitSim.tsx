@@ -1,9 +1,10 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as PIXI from "pixi.js";
 
 const OrbitSim = () => {
   const pixiContainerRef = useRef<HTMLDivElement | null>(null); // Ref for container
   const appRef = useRef<PIXI.Application | null>(null);
+  const [ numMoons, setNumMoons ] = useState<number>(1);
 
   /* 
     CONSTANTS
@@ -13,8 +14,20 @@ const OrbitSim = () => {
   const orbitingBodies: PIXI.Sprite[] = [];
   const velocityVectors: {x: number, y:number}[] = []
   const NUM_STARS = 200;
-  const NUM_MOONS = 5;
+  const NUM_MOONS = numMoons;
   let runPhysics = true;
+  let showVelocityVectors = false;
+  let showOrbitTrails = false;
+
+  const toggleRunPhysics = () => {
+    runPhysics = !runPhysics;
+  }
+  const toggleShowVelocityVectors = () => {
+    showVelocityVectors = !showVelocityVectors;
+  }
+  const toggleShowOrbitTrails = () => {
+    showOrbitTrails = !showOrbitTrails;
+  }
 
   const calculateOrbit = (orbitVelocityVector: {x: number, y:number}, orbitingBody: PIXI.Sprite, fixedBody: PIXI.Sprite) => {
     // Compute vector to Earth
@@ -47,6 +60,9 @@ const OrbitSim = () => {
     , fixedBody: PIXI.Sprite
     , pixiGraphics: PIXI.Graphics
   ) => {
+
+    if( !showOrbitTrails ) return;
+
     const tempSprite = new PIXI.Sprite();
     tempSprite.x = orbitingBody.x;
     tempSprite.y = orbitingBody.y;
@@ -127,7 +143,7 @@ const OrbitSim = () => {
     
     for( let i = 0; i < NUM_MOONS; i++ ) {
       const moon = new PIXI.Sprite(moonTexture);
-      moon.setSize( screen.width / 10 / Math.round( Math.random() * 4 ) );
+      moon.setSize( screen.width / 10 / (Math.round( (Math.random() ) * 4 ) ) + 1);
       moon.y = appContainer.y + 150 + Math.round( Math.random() * 200);
       moon.x = appContainer.x + 150 + Math.round( Math.random() * 200);
       appContainer.addChild(moon);
@@ -162,7 +178,7 @@ const OrbitSim = () => {
         orbitingBody.cursor = 'pointer';
         orbitingBody.on('pointerdown', (event) => {
           orbitPathGraphics.clear();
-          runPhysics = false;
+          toggleRunPhysics();
           dragTarget = orbitingBody;
           
           if (dragTarget) {
@@ -174,8 +190,8 @@ const OrbitSim = () => {
           if (dragTarget) {
             orbitPathGraphics.clear();
             for( let i = 0; i < orbitingBodies.length; i++ ) {
-              drawOrbitPaths( 2000, velocityVectors[i], orbitingBodies[i], earth, orbitPathGraphics );
               drawVelocityVectors( velocityVectorGraphics );
+              drawOrbitPaths( 2000, velocityVectors[i], orbitingBodies[i], earth, orbitPathGraphics );
             }
             dragTarget.parent.toLocal(event.global, undefined, dragTarget.position );
           }
@@ -183,7 +199,7 @@ const OrbitSim = () => {
       }
 
       appRef.current.stage.on('pointerup', () => {
-        runPhysics = true;
+        toggleRunPhysics();
         
         if (dragTarget)
           {
@@ -196,16 +212,18 @@ const OrbitSim = () => {
 
   const drawVelocityVectors = ( velocityVectorGraphics: PIXI.Graphics ) => {
     velocityVectorGraphics.clear();
-    for( let i = 0; i < orbitingBodies.length; i++ ) {
-
-      const velocityVector = velocityVectors[i];
-
-      velocityVectorGraphics.stroke({ width: 3, color: 'green' });
-      velocityVectorGraphics.moveTo( orbitingBodies[i].position.x, orbitingBodies[i].position.y );
-      velocityVectorGraphics.lineTo( 
-        orbitingBodies[i].x + velocityVector.x * 50
-        , orbitingBodies[i].y + velocityVector.y * 50 
-      );
+    
+    if( showVelocityVectors ) {
+      for( let i = 0; i < orbitingBodies.length; i++ ) {
+        const velocityVector = velocityVectors[i];
+  
+        velocityVectorGraphics.moveTo( orbitingBodies[i].position.x, orbitingBodies[i].position.y );
+        velocityVectorGraphics.stroke({ width: 3, color: 'green' });
+        velocityVectorGraphics.lineTo( 
+          orbitingBodies[i].x + velocityVector.x * 50
+          , orbitingBodies[i].y + velocityVector.y * 50 
+        );
+      }
     }
   }
 
@@ -246,14 +264,14 @@ const OrbitSim = () => {
 
         app.ticker.add((time) =>
           {
+            drawVelocityVectors( velocityVectorGraphics );
             for( let i = 0; i < orbitingBodies.length; i ++ ) {
-              if( runPhysics ) { 
-                drawVelocityVectors( velocityVectorGraphics );
+              if( runPhysics ) {
                 calculateOrbit( velocityVectors[i], orbitingBodies[i], earth); 
                 orbitingBodies[i].rotation -= 0.005 * time.deltaTime;
-                earth.rotation -= 0.01 * time.deltaTime;
               }
             } 
+            earth.rotation -= 0.01 * time.deltaTime;
         });
       }
     }
@@ -266,9 +284,61 @@ const OrbitSim = () => {
         appRef.current = null;
       }
     };
-  }, [ pixiContainerRef, appRef ]);
+  }, [ pixiContainerRef, appRef, numMoons, setNumMoons ]);
 
-  return <div ref={pixiContainerRef} className="h-screen"/>;
+  return (
+    <div ref={pixiContainerRef} className="h-screen">
+      <aside id="default-sidebar" className="fixed right-0 top-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
+        <div className="h-full px-3 py-4 overflow-y-auto bg-gray-800">
+            <ul className="space-y-2 font-medium bg-gray-900">
+              <li>
+                  <a href="#" className="flex items-center p-2 text-white rounded-lg hover:bg-black group">
+                    <input 
+                      type="checkbox" 
+                      id="pause-physics-checkbox"
+                      onChange={() => {toggleRunPhysics()}}
+                    >
+                    </input><span className="ms-3">Pause Physics</span>
+                  </a>
+              </li>
+              <li>
+                  <a href="#" className="flex items-center p-2 text-white rounded-lg hover:bg-black group">
+                    <input 
+                      type="checkbox" 
+                      id="orbit-trails-checkbox"
+                      onChange={()=>{ toggleShowOrbitTrails()}}
+                    ></input><span className="ms-3">Show Orbit Trails</span>
+                  </a>
+              </li>
+              <li>
+                  <a href="#" className="flex items-center p-2 text-white rounded-lg hover:bg-black group">
+                    <input 
+                      type="checkbox"
+                      id="velocity-vectors-checkbox"
+                      onChange={()=>{ toggleShowVelocityVectors();}}
+                    ></input><span className="ms-3">Show Velocity Vectors</span>
+                  </a>
+              </li>
+              <li>
+                  <a href="#" className="flex items-center p-2 text-white rounded-lg hover:bg-black group">
+                    <input
+                      type="number" 
+                      id="num-moons" 
+                      className="text-black text-center" 
+                      max={10} 
+                      min={1} 
+                      defaultValue={NUM_MOONS}
+                      onChange={(event)=>{ setNumMoons( Number(event.currentTarget.value) )}}
+                    >
+                      </input>
+                    <span className="ms-3">Moon Count</span>
+                  </a>
+              </li>
+            </ul>
+        </div>
+      </aside>
+    </div>
+  );
 };
 
 export default OrbitSim;
