@@ -23,14 +23,14 @@ const Plinko = () => {
         const ballTexture = await PIXI.Assets.load<PIXI.Texture>('/ballBearing.png');
         const pegTexture = await PIXI.Assets.load<PIXI.Texture>('/woodenCircle.png');
 
-
-        /* START ChatGPT Code */
             
             // Game variables
             let score = 0;
             let points = 100;
             let canBuyBall = true;
             let ballInPlay = false;
+            const BALL_RADIUS = 15;
+            const PEG_RADIUS = 20;
             
             // Data structure to store velocities for each sprite
             const velocities = new Map<number, { velocityX: number, velocityY: number}>();
@@ -47,8 +47,8 @@ const Plinko = () => {
             // Create the Plinko pegs (using sprites now)
             const pegs: PIXI.Sprite[] = [];
             const rowCount = 10;
-            const columnCount = 10;
-            const pegSpacing = app.screen.width / 10 ;
+            const columnCount = 12;
+            const pegSpacing = app.screen.width / 12 ;
             
             for (let row = 0; row < rowCount; row++) {
                 const yPos = 100 + row * pegSpacing;
@@ -56,7 +56,7 @@ const Plinko = () => {
                     const xPos = (col * pegSpacing) + (row % 2 === 0 ? 0 : pegSpacing / 2);
                 
                     const peg = new PIXI.Sprite(pegTexture);
-                    peg.setSize( 40 );
+                    peg.setSize( PEG_RADIUS * 2 );
                     peg.anchor.set(0.5); // To center the peg's texture
                     peg.x = xPos;
                     peg.y = yPos;
@@ -69,7 +69,7 @@ const Plinko = () => {
             let ball: PIXI.Sprite;
             function createBall( xPosition: number ) {
                 ball = new PIXI.Sprite(ballTexture);
-                ball.setSize( 30 );
+                ball.setSize( BALL_RADIUS * 2 );
                 ball.anchor.set(0.5);
                 ball.x = xPosition
                 ball.y = 50; // start position (top of the board)
@@ -121,32 +121,31 @@ const Plinko = () => {
                 const ballVelocity = getBallVelocity();
                 ball.y += ballVelocity.velocityY
                 ball.x += ballVelocity.velocityX
-            
+
                 // Check for collisions with pegs
                 for (const peg of pegs) {
                     const dist = Math.sqrt(Math.pow(ball.x - peg.x, 2) + Math.pow(ball.y - peg.y, 2));
             
                     // If the ball hits a peg
-                    if (dist < 13 + 20) { // ball radius + peg radius
+                    if (dist < BALL_RADIUS + PEG_RADIUS) { // ball radius + peg radius
+
                         const distanceToPegX = Math.abs(ball.x - peg.x);
                         const distanceToPegY = Math.abs(ball.y - peg.y);
-                        if (ball.x < peg.x) {
+
+                        if (ball.x <= peg.x) {
                             setBallVelocity(
-                                ballVelocity.velocityX + (-0.5 * (distanceToPegX / 20) )
-                                // ballVelocity.velocityX + (-0.5 * (Math.max(ballVelocity.velocityX, distanceToPegX / 20)) )
-                                , ballVelocity.velocityY + (-ballVelocity.velocityY * (distanceToPegY / 33 )) );
+                                (-0.5 * (distanceToPegX / 10) )
+                                , ballVelocity.velocityY - (ballVelocity.velocityY * (distanceToPegY / PEG_RADIUS )) );
                         } else {
                             setBallVelocity(
-                                ballVelocity.velocityX + (0.5 * (distanceToPegX / 20) )
-                                // ballVelocity.velocityX + (0.5 * (Math.max(ballVelocity.velocityX, distanceToPegX / 15)) )
-                                , -ballVelocity.velocityY + (-ballVelocity.velocityY * (distanceToPegY / 33 )) );
+                                (0.5 * (distanceToPegX / 10 ) )
+                                , ballVelocity.velocityY - (ballVelocity.velocityY * (distanceToPegY / PEG_RADIUS )) );
                         }
-                        // ball.y = peg.y + 20 + 15; // prevent ball from overlapping peg
                     }
                 }
-            
+
                 // Check if ball reaches bottom
-                if (ball.y > app.screen.height - 50) {
+                if (ball.y > app.screen.height - (BALL_RADIUS * 2)) {
                     ballInPlay = false;
                     calculateScore();
                 }
