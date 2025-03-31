@@ -37,7 +37,7 @@ export default function Nav(
                   setIsPlinkoEnabled(!isPlinkoEnabled);
                 }}
                 disabled={isOrbitSimEnabled}
-                className="block lg:inline-block text-md font-bold sm:hover:bg-transparent rounded-lg">
+                className="block lg:inline-block text-md font-bold sm:hover:bg-transparent rounded-lg m-1">
                 Orbit Sim
             </button>
             <button 
@@ -46,7 +46,7 @@ export default function Nav(
                   setIsOrbitSimEnabled(!isOrbitSimEnabled);
                 }}
                 disabled={isPlinkoEnabled}
-                className="block lg:inline-block text-md font-bold sm:hover:bg-transparent rounded-lg">
+                className="block lg:inline-block text-md font-bold sm:hover:bg-transparent rounded-lg m-1">
                 Plinko
             </button>
         </div>
