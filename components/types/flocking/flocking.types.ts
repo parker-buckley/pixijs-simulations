@@ -10,8 +10,8 @@ export class Boid {
       this.pixiAnimatedSprite = new PIXI.AnimatedSprite( animationSprites );
       this.pixiAnimatedSprite.x = x
       this.pixiAnimatedSprite.y = y
-      this.pixiAnimatedSprite.width = 50; 
-      this.pixiAnimatedSprite.height = 50;
+      this.pixiAnimatedSprite.width = 30; 
+      this.pixiAnimatedSprite.height = 30;
       this.pixiAnimatedSprite.anchor.set( 0.5 );
       this.pixiAnimatedSprite.animationSpeed = 0.1;
       this.pixiAnimatedSprite.rotation = Math.atan2( this.velocity.x, this.velocity.y );
