@@ -1,67 +1,21 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { Vector } from "@/components/types/flocking/flocking.types"
 
-import {
-  TickerTags
-} from "@/components/types/global"
+export const getRandomSignedNumber = ( range: number ) => {
+    const isPositive = (Math.random() < 0.5)
 
-import { NUM_POINTS, tickerMaxValues, tickerMaxVolatility, tickerMinValues, tickerRanges, tickerVolatilities } from "./constants"
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
-
-export const calculateRollingAverage =( currentAverage: number, currentQuantity:number,  addedQuantity: number, addedPrice: number ): number => {
-  if ( currentQuantity === 0 || currentAverage === 0 ) { return addedPrice; }
-  const rawRollingAverage = ( currentAverage * currentQuantity + (addedPrice * addedQuantity)) / ( currentQuantity + addedQuantity );
-  return Math.round(rawRollingAverage * 100) / 100;
-}
-
-const generateRandomNumber = ( max?: number ): number => {
-  if ( max )
-      return Math.round( Math.random() * max );
-
-  return Math.round( Math.random() * 200000 );
-};
-
-// Sample stock data generator
-export const generateStockData = (
-  ticker: TickerTags
-  , numPoints = NUM_POINTS
-) => {
-
-  let price = tickerMinValues[ticker] + Math.round((tickerRanges[ticker] / 2))
-  const arr = [];
-
-  for( let i = 0; i < numPoints; i++ ) {
-    let newPrice: number = 0;
-    
-    if( ticker === TickerTags.Trba ) {
-      newPrice = Math.round(newPrice - tickerVolatilities[ticker] / 4);
+    if( isPositive ) {
+        return Math.round( Math.random() * range )
     } else {
-      newPrice = Math.round(price + Math.random() * tickerVolatilities[ticker] - tickerVolatilities[ticker] / 2);
+        return -1 * Math.round( Math.random() * range )
     }
-    const tickerMax = tickerMaxValues[ticker];
-    const tickerMin = tickerMinValues[ticker];
-
-    while( newPrice < tickerMin || newPrice > tickerMax) {
-      if( ticker === TickerTags.Trba ) {
-        if( newPrice <= 0 ) { newPrice = 0; }
-      } else {
-        newPrice = Math.round(newPrice + Math.random() * tickerVolatilities[ticker] - tickerVolatilities[ticker] / 2);
-      }
-    }
-
-    arr[i] = { time: i, price: newPrice };
-    price = newPrice;
-  }
-
-  return arr;
 }
 
-export const changeVolatility = () => {
-  for( const key of Object.keys( tickerVolatilities )) {
-    const ticker = key as TickerTags;
-    tickerVolatilities[ticker] = generateRandomNumber( tickerMaxVolatility[ticker] );
-  }
+export const angleBetweenVectors = (v1: Vector, v2: Vector) => {
+    const dot = v1.x * v2.x + v1.y * v2.y; // Dot product
+    const det = v1.x * v2.y - v1.y * v2.x; // Determinant (cross product in 2D)
+    return Math.atan2(det, dot); // Angle difference in radians
+}
+
+export const radiansToUnitVector = (radians: number) => {
+    return new Vector(Math.cos(radians),Math.sin(radians));
 }

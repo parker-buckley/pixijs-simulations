@@ -1,16 +1,21 @@
 import React, { useEffect, useRef } from "react";
 import * as PIXI from "pixi.js";
 
-import { Boid } from './types/flocking/flocking'
+import { Boid, Vector } from './types/flocking/flocking.types'
+import { calculateCohesion, calculateSeparation, calculateAlignment, boundPositions } from '@/lib/flocking/flocking'
+import { getRandomSignedNumber } from "@/lib/utils";
 
 const Flocking = () => {
   const pixiContainerRef = useRef<HTMLDivElement | null>(null); // Ref for container
   const appRef = useRef<PIXI.Application | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  let cohesion = 5;
-  let separation = 5;
-  let alignment = 5;
+  let cohesion = 25;
+  let separation = 25;
+  let alignment = 6;
+  const LOCAL_FLOCK_RADIUS = 100;
+  const NUM_BOIDS = 25;
+  const BOUNDARY_MARGIN = 50;
 
   useEffect( () => {
     const appReady = new Promise<PIXI.Application>((resolve) => {
@@ -48,27 +53,35 @@ const Flocking = () => {
           , PIXI.Assets.load<PIXI.Texture>('/Animations/birdFlight/flight4.png')
         ]);
 
-        const boid = new Boid( 
-          appRef.current.screen.width / 2
-          , appRef.current.screen.height / 2
-          , appRef.current
-          , [ birdFlightFrame1, birdFlightFrame2 , birdFlightFrame3, birdFlightFrame4 ]
-        );
+        const boids: Boid[] = [];
+        for( let i = 0; i < NUM_BOIDS; i++ ) {
+          boids.push( new Boid( 
+            (appRef.current.screen.width / 2) + + getRandomSignedNumber(screen.width/5)
+            , (appRef.current.screen.height / 2) + getRandomSignedNumber(screen.height/5)
+            , appRef.current
+            , [ birdFlightFrame1, birdFlightFrame2 , birdFlightFrame3, birdFlightFrame4 ]
+            , new Vector( Math.random(), Math.random())
+          ));
+        }
 
 
-        // Rule 1: Boids try to fly towards the centre of mass of neighbouring boids.
+        // Rule 1: Boids try to fly towards the centre of mass of neighbouring boids. (COHESION)
+        // Rule 2: Boids try to keep a small distance away from other objects (including other boids). (SEPARATION)
+        // Rule 3: Boids try to match velocity with near boids. (ALIGNMENT)
 
-        // Rule 2: Boids try to keep a small distance away from other objects (including other boids).
-
-
-        // Rule 3: Boids try to match velocity with near boids.
-
-        // Limiting the speed
-
-        // Bounding the position
+        // Stretch goals
+        // Limiting the speed DONE 
+        // Bounding the position DONE
+        
         app.ticker.add(() =>
-        {
-          boid.updatePosition();
+          {
+            calculateCohesion(boids, LOCAL_FLOCK_RADIUS, cohesion);
+            calculateSeparation(boids, LOCAL_FLOCK_RADIUS, separation);
+            calculateAlignment(boids, LOCAL_FLOCK_RADIUS, alignment);
+            boundPositions(boids, app.screen.left, app.screen.right, app.screen.top, app.screen.bottom, BOUNDARY_MARGIN );
+            for( const boid of boids ) {
+              boid.updatePosition();
+            }
         });
       }
     
@@ -95,33 +108,36 @@ const Flocking = () => {
               <input 
                 type="range" 
                 id="cohesionSlider" 
-                min="0" 
-                max="10" 
-                step="0.1" 
+                min="1" 
+                max="200" 
+                step="2" 
                 onChange={(event)=> { cohesion = Number(event.target.value) }}
                 ></input>
+                <span>{cohesion}</span>
             </div>
             <div className="slider-group">
               <label>Separation:</label>
               <input 
                 type="range"
                 id="separationSlider"
-                min="0"
-                max="10"
-                step="0.1"
+                min="1"
+                max="100"
+                step="2"
                 onChange={(event)=> { separation = Number(event.target.value) }}
               ></input>
+              <span>{separation}</span>
             </div>
             <div className="slider-group">
               <label>Alignment:</label>
               <input 
                 type="range" 
                 id="alignmentSlider" 
-                min="0" 
-                max="10" 
-                step="0.1" 
+                min="7" 
+                max="14" 
+                step="0.5" 
                 onChange={(event)=> { alignment = Number(event.target.value) }}
                 ></input>
+                <span>{alignment}</span>
             </div>
           </div>
         </div>
