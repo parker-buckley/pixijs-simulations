@@ -13,9 +13,9 @@ const Flocking = () => {
   let cohesion = 25;
   let separation = 60;
   let alignment = 10;
-  const LOCAL_FLOCK_RADIUS = 100;
-  const NUM_BOIDS = 25;
-  const BOUNDARY_MARGIN = 50;
+  let localFlockRadius = 100;
+  let numBoids = 25;
+  let boundaryMargin = 50;
 
   useEffect( () => {
     const appReady = new Promise<PIXI.Application>((resolve) => {
@@ -24,6 +24,34 @@ const Flocking = () => {
       resolve(app);
     });
 
+    const updateBoidCount = (boids: Boid[], newBoidCount: number, flightFrames: PIXI.Texture[]) => {
+      const currentCount = boids.length;
+      const boidsToAddOrRemove = newBoidCount - currentCount;
+      
+      if( boidsToAddOrRemove === 0 ) return;
+
+      if( boidsToAddOrRemove > 0 ) {
+        for( let i = 0; i < boidsToAddOrRemove; i++ ) {
+          if( appRef.current ) {
+            boids.push( new Boid( 
+              (appRef.current.screen.width / 2) + + getRandomSignedNumber(screen.width/5)
+              , (appRef.current.screen.height / 2) + getRandomSignedNumber(screen.height/5)
+              , appRef.current
+              , flightFrames
+              , new Vector( Math.random(), Math.random())
+            ));
+          }
+        }
+      } else {
+        for( let i = 0; i < Math.abs(boidsToAddOrRemove); i++ ) { 
+          const boidToRemove = boids.pop();
+          if( boidToRemove ) {
+            boidToRemove.pixiAnimatedSprite.destroy();
+          }
+        }
+      }
+
+    }
 
     const applicationWrapper = async () => {
       const app = await appReady;      
@@ -95,31 +123,15 @@ const Flocking = () => {
         ]);
 
         const boids: Boid[] = [];
-        for( let i = 0; i < NUM_BOIDS; i++ ) {
-          boids.push( new Boid( 
-            (appRef.current.screen.width / 2) + + getRandomSignedNumber(screen.width/5)
-            , (appRef.current.screen.height / 2) + getRandomSignedNumber(screen.height/5)
-            , appRef.current
-            , [ birdFlightFrame1, birdFlightFrame2 , birdFlightFrame3, birdFlightFrame4 ]
-            , new Vector( Math.random(), Math.random())
-          ));
-        }
+        updateBoidCount(boids, numBoids, [birdFlightFrame1, birdFlightFrame2 , birdFlightFrame3, birdFlightFrame4]);
 
-
-        // Rule 1: Boids try to fly towards the centre of mass of neighbouring boids. (COHESION)
-        // Rule 2: Boids try to keep a small distance away from other objects (including other boids). (SEPARATION)
-        // Rule 3: Boids try to match velocity with near boids. (ALIGNMENT)
-
-        // Stretch goals
-        // Limiting the speed DONE 
-        // Bounding the position DONE
-        
         app.ticker.add(() =>
           {
-            calculateCohesion(boids, LOCAL_FLOCK_RADIUS, cohesion);
-            calculateSeparation(boids, LOCAL_FLOCK_RADIUS, separation);
-            calculateAlignment(boids, LOCAL_FLOCK_RADIUS, alignment);
-            boundPositions(boids, app.screen.left, app.screen.right, app.screen.top, app.screen.bottom, BOUNDARY_MARGIN );
+            updateBoidCount(boids, numBoids, [birdFlightFrame1, birdFlightFrame2 , birdFlightFrame3, birdFlightFrame4]);
+            calculateCohesion(boids, localFlockRadius, cohesion);
+            calculateSeparation(boids, localFlockRadius, separation);
+            calculateAlignment(boids, localFlockRadius, alignment);
+            boundPositions(boids, app.screen.left, app.screen.right, app.screen.top, app.screen.bottom, boundaryMargin );
             for( const boid of boids ) {
               boid.updatePosition();
             }
@@ -179,6 +191,42 @@ const Flocking = () => {
                 onChange={(event)=> { alignment = Number(event.target.value) }}
                 ></input>
                 <span>{alignment}</span>
+            </div>
+            <div className="slider-group">
+              <label>Neighbor Radius:</label>
+              <input 
+                type="range" 
+                id="flockRadiusSlider" 
+                min="10" 
+                max="150" 
+                step="5" 
+                onChange={(event)=> { localFlockRadius = Number(event.target.value) }}
+                ></input>
+                <span>{localFlockRadius}</span>
+            </div>
+            <div className="slider-group">
+              <label>Boundary Margin:</label>
+              <input 
+                type="range" 
+                id="boundaryMarginSlider" 
+                min="0" 
+                max="150" 
+                step="5" 
+                onChange={(event)=> { boundaryMargin = Number(event.target.value) }}
+                ></input>
+                <span>{boundaryMargin}</span>
+            </div>
+            <div className="slider-group">
+              <label>Bird Count:</label>
+              <input 
+                type="range" 
+                id="numBoidsSlider" 
+                min="0" 
+                max="150" 
+                step="1" 
+                onChange={(event)=> { numBoids = Number(event.target.value) }}
+                ></input>
+                <span>{numBoids}</span>
             </div>
           </div>
         </div>
