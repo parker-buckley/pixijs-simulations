@@ -22,6 +22,7 @@ const OrbitSim = () => {
 
   const toggleRunPhysics = () => {
     runPhysics = !runPhysics;
+    document.getElementById("pause-physics-checkbox").checked = (runPhysics) ? true: false;
   }
   const toggleShowVelocityVectors = () => {
     showVelocityVectors = !showVelocityVectors;
@@ -325,7 +326,7 @@ const OrbitSim = () => {
     }
 
     applicationWrapper()
-  }, [ pixiContainerRef, appRef, numMoons, setNumMoons, canvasRef ]);
+  }, [ pixiContainerRef, appRef, numMoons, setNumMoons, canvasRef, showOrbitTrails, showVelocityVectors ]);
 
   return (
     <div ref={pixiContainerRef} className="h-screen">
