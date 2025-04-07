@@ -1,12 +1,14 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as PIXI from "pixi.js";
 
-import { generateTerrain } from "@/lib/perlinNoise/perlinNoise";
+import { generateBgTexture, generateTerrain, generateTilemap, getColor } from "@/lib/perlinNoise/perlinNoise";
 
 const PerlinNoise = () => {
   const pixiContainerRef = useRef<HTMLDivElement | null>(null); // Ref for container
   const appRef = useRef<PIXI.Application | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  let [ scale, setScale ] = useState<number>( 10 );
 
   useEffect( () => {
     const appReady = new Promise<PIXI.Application>((resolve) => {
@@ -35,6 +37,11 @@ const PerlinNoise = () => {
         }
         pixiContainerRef.current.appendChild(app.canvas);
 
+        const tilemapGraphics = new PIXI.Graphics();
+        appRef.current.stage.addChild(tilemapGraphics);
+        
+        generateBgTexture(appRef, tilemapGraphics, scale);
+
         app.ticker.add(() =>
           {
             /* game loop */
@@ -51,19 +58,21 @@ const PerlinNoise = () => {
 
     applicationWrapper()
 
-  }, [ pixiContainerRef, appRef, canvasRef ]);
+  }, [ pixiContainerRef, appRef, canvasRef, scale ]);
 
   return (
     <div ref={pixiContainerRef} className="h-screen">
       <aside id="default-sidebar" className="fixed right-0 top-50 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
         <div className="h-full px-3 py-4 overflow-y-auto bg-transparent">
           <div className="control-panel bg-transparent">
-            <h2>Procedural Generation</h2>
+            <h2 className="text-black">Procedural Generation</h2>
             <div className="slider-group">
               <input
-                type="button" 
-                value="Generate"
-                onClick={(event)=> { generateTerrain() }}
+                type="range" 
+                min="2"
+                max="20"
+                step="1"
+                onChange={(newScale)=> { setScale(Number(newScale.target.value)) }}
                 ></input>
             </div>
           </div>

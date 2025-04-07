@@ -59,7 +59,7 @@ export default function Nav(
                   setIsFlockingEnabled(!isFlockingEnabled);
                   if(isOrbitSimEnabled) setIsOrbitSimEnabled(!isOrbitSimEnabled);
                   if(isPlinkoEnabled) setIsPlinkoEnabled(!isPlinkoEnabled);
-                  if(isPerlinNoiseEnabled) setIsPlinkoEnabled(!isPerlinNoiseEnabled);
+                  if(isPerlinNoiseEnabled) setIsPerlinNoiseEnabled(!isPerlinNoiseEnabled);
                 }}
                 disabled={isFlockingEnabled}
                 className="block lg:inline-block text-md font-bold m-1 bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg">
