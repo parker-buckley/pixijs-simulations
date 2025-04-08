@@ -153,7 +153,7 @@ export const generateBgTexture = (
     if( !appRef.current ) return; 
     const app = appRef.current;
 
-    const horizontalTileCount = 100;
+    const horizontalTileCount = 50;
     const tileWidth = app.screen.width / horizontalTileCount;
     const tileHeight = tileWidth
     const verticalTileCount = Math.ceil( app.screen.height / tileHeight )

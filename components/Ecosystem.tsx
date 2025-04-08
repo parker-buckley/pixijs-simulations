@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as PIXI from "pixi.js";
 
-import { generateBgTexture } from "@/lib/perlinNoise/perlinNoise";
+import { generateBgTexture, generateTerrain, generateTilemap, getColor } from "@/lib/perlinNoise/perlinNoise";
 
-const PerlinNoise = () => {
+const Ecosystem = () => {
   const pixiContainerRef = useRef<HTMLDivElement | null>(null); // Ref for container
   const appRef = useRef<PIXI.Application | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -82,4 +82,4 @@ const PerlinNoise = () => {
   );
 };
 
-export default PerlinNoise;
+export default Ecosystem;
