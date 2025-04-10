@@ -29,7 +29,7 @@ export default function Nav() {
             <Link href={'/plinko'}>
               <button 
                   className="block lg:inline-block text-md font-bold m-1 bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg">
-                  Orbit Sim
+                  Plinko
               </button>
             </Link>
             <Link href={'/perlin-noise'}>

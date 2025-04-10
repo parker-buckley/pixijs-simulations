@@ -95,13 +95,13 @@ function getColor(value:number) {
   
     switch (true) {
       // Dark Blue (Most Negative Values)
-      case (value <= -0.8):
+      case (value <= -0.5):
         color = "#00008B"; // Dark Blue
         break;
-      case (value <= -0.6):
+      case (value <= -0.4):
         color = "#0000A0";
         break;
-      case (value <= -0.4):
+      case (value <= -0.3):
         color = "#0000B3";
         break;
   
@@ -109,30 +109,30 @@ function getColor(value:number) {
       case (value <= -0.2):
         color = "#1A1AFF"; // Light Blue
         break;
-      case (value <= 0):
+      case (value <= -0.1):
         color = "#4D4DFF"; // Lighter Blue
   
       // Light Brown (Near Zero)
-      case (value <= 0.2):
+      case (value <= 0.1):
         color = "#D9B38C"; // Light Brown
         break;
-      case (value <= 0.4):
+      case (value <= 0.2):
         color = "#B5A17D"; // Lighter Brown
   
       // Dark Brown
-      case (value <= 0.6):
+      case (value <= 0.3):
         color = "#6E5D47"; // Darker Brown
         break;
-      case (value <= 0.8):
+      case (value <= 0.4):
         color = "#4A4C32"; // Dark Brown
   
       // Light Green
-      case (value <= 0.9):
+      case (value <= 0.5):
         color = "#2D5122"; // Light Green
         break;
   
       // Dark Green (Most Positive Values)
-      case (value >= 1):
+      case (value >= 0.5):
         color = "#003C09"; // Dark Green
         break;
       default:
@@ -160,8 +160,15 @@ export const generateBgTexture = (
 
     const tilemapMatrix = generateTilemap( verticalTileCount , horizontalTileCount , scale );
 
+    let min = 10000;
+    let max = -10000;
+
     for( let i = 0; i < verticalTileCount; i++ ) {
         for( let j = 0; j < horizontalTileCount; j++ ) {
+            
+            if( tilemapMatrix[i][j] < min ) min = tilemapMatrix[i][j];
+            if( tilemapMatrix[i][j] > max ) max = tilemapMatrix[i][j];
+
             const hexCode = getColor(tilemapMatrix[i][j]);
 
             if( tilemapMatrix[i][j] === 1 ) {
@@ -175,5 +182,8 @@ export const generateBgTexture = (
             }
         }
     }
+
+    console.log('min', min);
+    console.log('max', max);
 }
   

@@ -133,8 +133,8 @@ const OrbitSim = () => {
       );
     }
 
-    const earthTexture = await PIXI.Assets.load<PIXI.Texture>('/earthTransparentBackground.png');
-    const moonTexture = await PIXI.Assets.load<PIXI.Texture>('/moonTransparentBackground.png');
+    const earthTexture = await PIXI.Assets.load<PIXI.Texture>('/orbit-sim/earthTransparentBackground.png');
+    const moonTexture = await PIXI.Assets.load<PIXI.Texture>('/orbit-sim/moonTransparentBackground.png');
 
     const earth = new PIXI.Sprite(earthTexture);
     earth.setSize( screen.width / 8 );

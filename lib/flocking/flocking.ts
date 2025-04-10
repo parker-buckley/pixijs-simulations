@@ -137,10 +137,10 @@ export const setupBackground = async ( appRef: React.MutableRefObject<PIXI.Appli
     if( !appRef.current ) return;
 
     const [ bg1, bg2 , bg3, bg4 ] = await Promise.all( [
-        PIXI.Assets.load<PIXI.Texture>('/BG/1.png')
-        , PIXI.Assets.load<PIXI.Texture>('/BG/2.png')
-        , PIXI.Assets.load<PIXI.Texture>('/BG/3.png')
-        , PIXI.Assets.load<PIXI.Texture>('/BG/4.png')
+        PIXI.Assets.load<PIXI.Texture>('/flocking/background/1.png')
+        , PIXI.Assets.load<PIXI.Texture>('/flocking/background/2.png')
+        , PIXI.Assets.load<PIXI.Texture>('/flocking/background/3.png')
+        , PIXI.Assets.load<PIXI.Texture>('/flocking/background/4.png')
     ]);
 
     const bg1Sprite = new PIXI.Sprite( bg1 );

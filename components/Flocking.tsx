@@ -76,10 +76,10 @@ const Flocking = () => {
         await setupBackground( appRef );
 
         const [ birdFlightFrame1, birdFlightFrame2 , birdFlightFrame3, birdFlightFrame4 ] = await Promise.all( [
-          PIXI.Assets.load<PIXI.Texture>('/Animations/birdFlight/flight1.png')
-          , PIXI.Assets.load<PIXI.Texture>('/Animations/birdFlight/flight2.png')
-          , PIXI.Assets.load<PIXI.Texture>('/Animations/birdFlight/flight3.png')
-          , PIXI.Assets.load<PIXI.Texture>('/Animations/birdFlight/flight4.png')
+          PIXI.Assets.load<PIXI.Texture>('/flocking/birdFlightAnimation/flight1.png')
+          , PIXI.Assets.load<PIXI.Texture>('/flocking/birdFlightAnimation/flight2.png')
+          , PIXI.Assets.load<PIXI.Texture>('/flocking/birdFlightAnimation/flight3.png')
+          , PIXI.Assets.load<PIXI.Texture>('/flocking/birdFlightAnimation/flight4.png')
         ]);
 
         const boids: Boid[] = [];

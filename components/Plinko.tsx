@@ -32,8 +32,8 @@ const Plinko = () => {
         canvasRef.current.height = pixiContainerRef.current.clientHeight;
         canvasRef.current.setAttribute( 'id', 'pixi-canvas ');
         
-        const ballTexture = await PIXI.Assets.load<PIXI.Texture>('/ballBearing.png');
-        const pegTexture = await PIXI.Assets.load<PIXI.Texture>('/woodenCircle.png');
+        const ballTexture = await PIXI.Assets.load<PIXI.Texture>('/plinko/ballBearing.png');
+        const pegTexture = await PIXI.Assets.load<PIXI.Texture>('/plinko/woodenCircle.png');
         
         // Create score and points text
         const scoreText = new PIXI.Text('Score: ' + score, {fontFamily: 'Arial', fontSize: 24, fill: 0x000000});

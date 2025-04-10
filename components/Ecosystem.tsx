@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as PIXI from "pixi.js";
 
-import { generateBgTexture, generateTerrain, generateTilemap, getColor } from "@/lib/perlinNoise/perlinNoise";
+import { generateSpriteMatrix } from "@/lib/ecosystem/ecosystem";
 
 const Ecosystem = () => {
   const pixiContainerRef = useRef<HTMLDivElement | null>(null); // Ref for container
@@ -36,11 +36,8 @@ const Ecosystem = () => {
             }
         }
         pixiContainerRef.current.appendChild(app.canvas);
-
-        const tilemapGraphics = new PIXI.Graphics();
-        appRef.current.stage.addChild(tilemapGraphics);
         
-        generateBgTexture(appRef, tilemapGraphics, scale);
+        generateSpriteMatrix( appRef, scale );
 
         app.ticker.add(() =>
           {
