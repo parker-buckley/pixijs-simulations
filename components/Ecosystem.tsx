@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as PIXI from "pixi.js";
 
-import { generateSpriteMatrix } from "@/lib/ecosystem/ecosystem";
+import { generatePerlinNoiseMatrix, generatePlantSpriteMatrix, generateBackgroundSpriteMatrix } from "@/lib/ecosystem/ecosystem";
 
 const Ecosystem = () => {
   const pixiContainerRef = useRef<HTMLDivElement | null>(null); // Ref for container
@@ -37,7 +37,14 @@ const Ecosystem = () => {
         }
         pixiContainerRef.current.appendChild(app.canvas);
         
-        generateSpriteMatrix( appRef, scale );
+        const horizontalTileCount = 40;
+        const tileWidth = app.screen.width / horizontalTileCount;
+        const tileHeight = tileWidth;
+        const verticalTileCount = Math.ceil( app.screen.height / tileHeight );
+        
+        const perlinNoiseMatrix = generatePerlinNoiseMatrix( verticalTileCount, horizontalTileCount , scale );
+        generateBackgroundSpriteMatrix( appRef, horizontalTileCount, verticalTileCount, perlinNoiseMatrix );
+        generatePlantSpriteMatrix( appRef, horizontalTileCount, verticalTileCount, perlinNoiseMatrix );
 
         app.ticker.add(() =>
           {
@@ -67,7 +74,7 @@ const Ecosystem = () => {
               <input
                 type="range" 
                 min="2"
-                max="20"
+                max="40"
                 step="1"
                 onChange={(newScale)=> { setScale(Number(newScale.target.value)) }}
                 ></input>

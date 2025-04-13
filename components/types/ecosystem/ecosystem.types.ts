@@ -10,4 +10,7 @@ export enum TileType {
 }
 
 export type TileTypeTextureMap = Record<TileType, Texture>;
+
 export type SpriteMatrix = { tileType: TileType, sprite: Sprite }[][];
+
+export type PlantSpriteMatrix = { tileType: TileType, sprite: Sprite | undefined }[][];

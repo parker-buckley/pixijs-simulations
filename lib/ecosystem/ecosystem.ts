@@ -1,5 +1,5 @@
 import { Sprite, Texture, Assets, Application, Renderer, Point } from 'pixi.js'
-import { SpriteMatrix, TileType, TileTypeTextureMap } from '@/components/types/ecosystem/ecosystem.types';
+import { BlendTextures, PlantSpriteMatrix, SpriteMatrix, TileType, TileTypeTextureMap } from '@/components/types/ecosystem/ecosystem.types';
 
 
 function fade(t: number): number {
@@ -60,6 +60,11 @@ function noise(x: number, y: number, octaves: number = 1, persistence: number = 
     return total / maxAmplitude;
 }
 
+/* 
+  The permunation matrix is effectively the seed for the perlin noise.
+  Moving this to a const ensures that, regardless of the perlin noise octaves or other configurations, the seed data will remain the same between generations.
+  This will allow us to generate different "flavors" of the tilemap without changing the overall map layout.
+*/
 const p: number[] = Array(512).fill(0).map((_, i) => i); // Permutation table (size 512)
 for (let i = 0; i < 256; i++) {
     const j = Math.floor(Math.random() * 256);
@@ -98,15 +103,15 @@ function getTileType(value:number): TileType {
     case (value <= -0.4):
       tileType = TileType.DeepWater
       break;
-    case (value <= -0.3):
-      tileType = TileType.DeepWater
-      break;
     case (value <= -0.2):
-      tileType = TileType.ShallowWater
+      tileType = TileType.DeepWater
       break;
     case (value <= -0.1):
       tileType = TileType.ShallowWater
-    case (value <= 0.1):
+      break;
+    case (value <= -0.05):
+      tileType = TileType.Beach
+    case (value <= 0.00):
       tileType = TileType.Beach
       break;
     case (value <= 0.2):
@@ -137,28 +142,149 @@ function getTileType(value:number): TileType {
 const loadTileTypeTextureMap = async (): Promise<TileTypeTextureMap> => {
   const tileSetBasePath = '/ecosystem/unknown-horizons-tiles';
   
-  const textures = await Promise.all( [
-    Assets.load<Texture>(`${tileSetBasePath}/deep0/straight/0/0.png`)
-    , Assets.load<Texture>(`${tileSetBasePath}/shallow0/straight/0/0.png`)
-    , Assets.load<Texture>(`${tileSetBasePath}/beach0/straight/0/0.png`)
-    , Assets.load<Texture>(`${tileSetBasePath}/grass0/straight/0/0.png`)
-    , Assets.load<Texture>(`${tileSetBasePath}/grass0/straight/0/0.png`)
-    , Assets.load<Texture>(`${tileSetBasePath}/grass0/straight/0/0.png`)
-  ]);
+  const deepWaterTexture = await Assets.load<Texture>(`${tileSetBasePath}/deep0/straight/0/0.png`);
+  const shallowWaterTexture = await Assets.load<Texture>(`${tileSetBasePath}/shallow0/straight/0/0.png`);
+  const beachTexture = await Assets.load<Texture>(`${tileSetBasePath}/beach0/straight/0/0.png`);
+  const grassTexture = await Assets.load<Texture>(`${tileSetBasePath}/grass0/straight/0/0.png`);
 
   return {
-    [TileType.DeepWater]: textures[0] 
-    , [TileType.ShallowWater]: textures[1] 
-    , [TileType.Beach]: textures[2] 
-    , [TileType.Grass]: textures[3] 
-    , [TileType.Forest]: textures[4] 
-    , [TileType.DenseForest]: textures[5]
+    [TileType.DeepWater]: deepWaterTexture
+    , [TileType.ShallowWater]: shallowWaterTexture
+    , [TileType.Beach]: beachTexture
+    , [TileType.Grass]: grassTexture
+    , [TileType.Forest]: grassTexture
+    , [TileType.DenseForest]: grassTexture
   }
 }
 
-export const generateSpriteMatrix = async (
+export const generatePlantSpriteMatrix = async (
+  appRef: React.MutableRefObject<Application<Renderer> | null>
+  , horizontalTileCount: number
+  , verticalTileCount: number
+  , perlinNoiseMatrix: number[][]
+) => {
+
+  if( !appRef.current ) return []; 
+
+  const grassTextures = await Promise.all([
+    Assets.load<Texture>(`/ecosystem/plant-assets/grasses/grasses01.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/grasses/grasses02.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/grasses/grasses03.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/grasses/grasses04.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/grasses/grasses05.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/weeds/weed01.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/weeds/weed02.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/weeds/weed03.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/weeds/weed04.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/weeds/weed05.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/weeds/weed06.png`)
+  ]);
+  const shrubTextures = await Promise.all([
+    Assets.load<Texture>('/ecosystem/plant-assets/shrubs/shrub1-01.png')
+    , Assets.load<Texture>('/ecosystem/plant-assets/shrubs/shrub1-02.png')
+    , Assets.load<Texture>('/ecosystem/plant-assets/shrubs/shrub1-03.png')
+    , Assets.load<Texture>('/ecosystem/plant-assets/shrubs/shrub1-04.png')
+    , Assets.load<Texture>('/ecosystem/plant-assets/shrubs/shrub1-05.png')
+    , Assets.load<Texture>('/ecosystem/plant-assets/shrubs/shrub2-01.png')
+    , Assets.load<Texture>('/ecosystem/plant-assets/shrubs/shrub2-02.png')
+    , Assets.load<Texture>('/ecosystem/plant-assets/shrubs/shrub2-03.png')
+    , Assets.load<Texture>('/ecosystem/plant-assets/shrubs/shrub2-04.png')
+    , Assets.load<Texture>('/ecosystem/plant-assets/shrubs/shrub2-05.png')
+  ]);
+  const treeTextures = await Promise.all([
+    Assets.load<Texture>(`/ecosystem/plant-assets/trees/pine-none01.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/trees/pine-none02.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/trees/pine-none03.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/trees/pine-none04.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/trees/pine-none05.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/trees/pine-none06.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/trees/pine-none07.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/trees/pine-none08.png`)
+  ]);
+  const cactusTextures = await Promise.all([
+    Assets.load<Texture>(`/ecosystem/plant-assets/cacti/cactus01.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/cacti/cactus02.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/cacti/cactus03.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/cacti/cactus04.png`)
+  ]);
+  const waterPlantTextures = await Promise.all([
+    Assets.load<Texture>(`/ecosystem/plant-assets/water-plants/bamboo01.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/water-plants/bamboo02.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/water-plants/bamboo03.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/water-plants/bamboo04.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/water-plants/bamboo05.png`)
+    , Assets.load<Texture>(`/ecosystem/plant-assets/water-plants/bamboo06.png`)
+  ]);
+  
+  const plantMatrix: PlantSpriteMatrix = [];
+  const app = appRef.current;
+
+  const tileWidth = app.screen.width / horizontalTileCount;
+  const tileHeight = tileWidth;
+
+  for( let i = 0; i < verticalTileCount; i++ ) {
+    const row: {tileType: TileType, sprite: Sprite | undefined}[] = [];
+    for( let j = 0; j < horizontalTileCount; j++ ) {
+      const tileType = getTileType(perlinNoiseMatrix[i][j]);
+
+      let plantSprite: Sprite | undefined;
+
+      if( tileType === TileType.Forest ) {
+        if(Math.random() < 0.25 ){
+          const treeIndex = Math.round( Math.random() * (treeTextures.length - 1) );
+          plantSprite = new Sprite(treeTextures[treeIndex]);
+
+          app.stage.addChild( plantSprite );
+          
+        }
+      }
+      if( tileType === TileType.Grass ) {
+        if(Math.random() < 0.5 ){
+          const grassIndex = Math.round( Math.random() * (grassTextures.length - 1) );
+          plantSprite = new Sprite(grassTextures[grassIndex]);
+          app.stage.addChild( plantSprite );
+          
+        }
+        if(Math.random() < 0.01 ){
+          const shrubIndex = Math.round( Math.random() * (shrubTextures.length - 1) );
+          plantSprite = new Sprite(shrubTextures[shrubIndex]);
+          app.stage.addChild( plantSprite );
+          
+        }
+      }
+      if( tileType === TileType.Beach ) {
+        if(Math.random() < 0.01 ){
+          const cactusIndex = Math.round( Math.random() * (cactusTextures.length - 1) );
+          plantSprite = new Sprite(cactusTextures[cactusIndex]);
+          app.stage.addChild( plantSprite );
+          
+        }
+      }
+      if( tileType === TileType.ShallowWater ) {
+        if(Math.random() < 0.1 ){
+          const waterPlantIndex = Math.round( Math.random() * (waterPlantTextures.length - 1) );
+          plantSprite = new Sprite(waterPlantTextures[waterPlantIndex]);
+          app.stage.addChild( plantSprite );
+        }
+      }
+
+      if( plantSprite ) {
+        plantSprite.position = new Point( j * tileWidth, i * tileHeight );
+        plantSprite.anchor.set( 0.5, 1 );
+        plantSprite.zIndex = 1000;
+      }
+
+      row.push({tileType, sprite: plantSprite});
+    }
+    plantMatrix.push( row );
+  }
+}
+
+export const generateBackgroundSpriteMatrix = async (
     appRef: React.MutableRefObject<Application<Renderer> | null>
-    , scale: number
+    , horizontalTileCount: number
+    , verticalTileCount: number
+    , perlinNoiseMatrix: number[][]
 ): Promise<SpriteMatrix> => {
 
   if( !appRef.current ) return []; 
@@ -167,13 +293,8 @@ export const generateSpriteMatrix = async (
   const app = appRef.current;
 
   const tileTypeTextureMap = await loadTileTypeTextureMap();
-
-  const horizontalTileCount = 50;
   const tileWidth = app.screen.width / horizontalTileCount;
   const tileHeight = tileWidth;
-  const verticalTileCount = Math.ceil( app.screen.height / tileHeight );
-
-  const perlinNoiseMatrix = generatePerlinNoiseMatrix( verticalTileCount , horizontalTileCount , scale );
 
   for( let i = 0; i < verticalTileCount; i++ ) {
     const row: {tileType: TileType, sprite: Sprite}[] = [];
